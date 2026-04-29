@@ -1,0 +1,12 @@
+[project]
+name = "url-shortener"
+version = "0.1.0"
+description = "FastAPI URL shortener"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi[standard]>=0.136.1",
+]
+
+[tool.pytest.ini_options]
+pythonpath = "."
