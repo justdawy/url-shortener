@@ -16,9 +16,12 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 @router.get("/{short_code}")
 def redirect_url(short_code: str, session: SessionDep) -> RedirectResponse:
-    url = session.exec(select(URL).where(URL.short_code == short_code)).first()
+    url: URL = session.exec(select(URL).where(URL.short_code == short_code)).first()
     if not url:
         raise HTTPException(status_code=404, detail="URL not found")
+    url.clicks += 1
+    session.add(url)
+    session.commit()
     return RedirectResponse(url=url.original_url)
 
 

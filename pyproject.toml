@@ -5,6 +5,7 @@ description = "FastAPI URL shortener"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "alembic>=1.18.4",
     "fastapi[standard]>=0.136.1",
     "sqlmodel>=0.0.38",
 ]
