@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import RedirectResponse
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
@@ -26,8 +26,8 @@ def redirect_url(short_code: str, session: SessionDep) -> RedirectResponse:
 
 
 @router.get("/urls/", response_model=list[URLPublic])
-def read_urls(session: SessionDep):
-    return session.exec(select(URL)).all()
+def read_urls(session: SessionDep, offset: int = 0, limit: Annotated[int, Query(le=100)] = 100):
+    return session.exec(select(URL).offset(offset).limit(limit)).all()
 
 
 @router.get("/urls/{short_code}", response_model=URLPublic)
@@ -63,6 +63,19 @@ def update_url(short_code: str, data: URLUpdate, session: SessionDep):
         url.short_code = data.short_code
 
     session.add(url)
+    try:
+        session.commit()
+        session.refresh(url)
+        return url
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(status_code=400, detail="short_code already exists")
+
+@router.delete("/urls/{short_code}")
+def delete_url(short_code: str, session: SessionDep):
+    url = session.exec(select(URL).where(URL.short_code == short_code)).first()
+    if not url:
+        raise HTTPException(status_code=404, detail="URL not found")
+    session.delete(url)
     session.commit()
-    session.refresh(url)
-    return url
+    return {"ok": True}
