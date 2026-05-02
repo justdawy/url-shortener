@@ -6,6 +6,7 @@ from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
 from app.db.schema import get_session
+from app.core.redis import client as redis
 from app.models.url import URL, URLCreate, URLUpdate, URLPublic
 from app.utils.shortcode import generate_short_code
 
@@ -16,12 +17,22 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 @router.get("/{short_code}")
 def redirect_url(short_code: str, session: SessionDep) -> RedirectResponse:
+    # check cache first
+    cached = redis.get(f"url:{short_code}")
+    if cached:
+        return RedirectResponse(url=cached)
+
+    # fallback to DB
     url: URL = session.exec(select(URL).where(URL.short_code == short_code)).first()
     if not url:
         raise HTTPException(status_code=404, detail="URL not found")
+
+    redis.set(f"url:{short_code}", url.original_url, ex=3600)   
+
     url.clicks += 1
     session.add(url)
     session.commit()
+
     return RedirectResponse(url=url.original_url)
 
 
@@ -64,6 +75,7 @@ def update_url(short_code: str, data: URLUpdate, session: SessionDep):
 
     session.add(url)
     try:
+        redis.delete(f"url:{short_code}")
         session.commit()
         session.refresh(url)
         return url
@@ -76,6 +88,7 @@ def delete_url(short_code: str, session: SessionDep):
     url = session.exec(select(URL).where(URL.short_code == short_code)).first()
     if not url:
         raise HTTPException(status_code=404, detail="URL not found")
+    redis.delete(f"url:{short_code}")
     session.delete(url)
     session.commit()
     return {"ok": True}
