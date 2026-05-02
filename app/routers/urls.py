@@ -41,7 +41,7 @@ def read_url(short_code: str, session: SessionDep) -> URL:
 @router.post("/urls/")
 def create_url(data: URLCreate, session: SessionDep) -> URL:
     for _ in range(5):
-        url = URL(original_url=data.original_url, short_code=generate_short_code())
+        url = URL(original_url=str(data.original_url), short_code=generate_short_code())
         session.add(url)
         try:
             session.commit()

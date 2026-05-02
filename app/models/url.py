@@ -1,8 +1,9 @@
 from datetime import datetime
 from sqlmodel import Field, SQLModel
+from pydantic import AnyHttpUrl
 
 class URLCreate(SQLModel):
-    original_url: str
+    original_url: AnyHttpUrl
 
 class URL(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
