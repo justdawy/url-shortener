@@ -1,0 +1,15 @@
+services:
+  web:
+    build: .
+    depends_on:
+      - redis
+    ports:
+      - "8000:80"
+    environment:
+      - DB_USER=admin
+      - DB_PASSWORD=secret
+      - DB_NAME=urls.db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+  redis:
+    image: redis:alpine
