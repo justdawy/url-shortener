@@ -62,7 +62,7 @@ def create_url(data: URLCreate, session: SessionDep):
             session.rollback()
     raise HTTPException(status_code=500, detail="Could not generate unique short code")
 
-@router.patch("/urls/", response_model=URLPublic)
+@router.patch("/urls/{short_code}", response_model=URLPublic)
 def update_url(short_code: str, data: URLUpdate, session: SessionDep):
     url = session.exec(select(URL).where(URL.short_code == short_code)).first()
     if not url:
