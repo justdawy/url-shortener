@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlmodel import Field, SQLModel
 from pydantic import AnyHttpUrl
 
@@ -6,7 +6,7 @@ class URLBase(SQLModel):
     original_url: str
     clicks: int = Field(default=0)
     short_code: str = Field(index=True, unique=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class URL(URLBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
